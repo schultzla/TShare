@@ -1,3 +1,5 @@
+package Data;
+
 public class Jobcode {
 
     private int id, parent_id;

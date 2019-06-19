@@ -1,9 +1,13 @@
+import Data.Jobcode;
+import Data.JobcodeAssignment;
+import Data.User;
+import Root.RootJobcode;
+import Root.RootJobcodeAssignment;
+import Root.RootUser;
 import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import javax.swing.plaf.synth.SynthComboBoxUI;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -109,6 +113,9 @@ public class TSheetSearch {
 
         RootUser root = new Gson().fromJson(temp, RootUser.class);
 
+        if (root.getUsers().size() == 0) {
+            throw new IllegalArgumentException();
+        }
 
         return root.getUsers().get(0);
     }
@@ -143,7 +150,7 @@ public class TSheetSearch {
                 continue;
             } else if (j.hasChild()) {
                 continue;
-            } else if (j.getName().startsWith("B&P") || j.getName().startsWith("IR&D")) {
+            } else if (j.isAssignedToAll()) {
                 continue;
             }
 

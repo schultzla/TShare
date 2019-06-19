@@ -1,3 +1,5 @@
+package Data;
+
 public class JobcodeAssignment {
 
     private int id, jobcode_id;

@@ -1,3 +1,5 @@
+package Data;
+
 public class User {
 
     private int id;
