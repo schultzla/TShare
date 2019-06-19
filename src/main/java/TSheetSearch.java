@@ -3,6 +3,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import javax.swing.plaf.synth.SynthComboBoxUI;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -108,6 +109,7 @@ public class TSheetSearch {
 
         RootUser root = new Gson().fromJson(temp, RootUser.class);
 
+
         return root.getUsers().get(0);
     }
 
@@ -127,5 +129,36 @@ public class TSheetSearch {
         return ans;
     }
 
+    public Jobcode getJobcode(int id) {
+        return jobcodes.get(id);
+    }
 
+    public ArrayList<String> getStringContracts(String name) {
+        ArrayList<String> complete = new ArrayList<>();
+
+        for (Jobcode j : getUserContracts(getUserByName(name).getId())) {
+            StringBuffer contract = new StringBuffer();
+
+            if (j.getParentId() == 0) {
+                continue;
+            } else if (j.hasChild()) {
+                continue;
+            } else if (j.getName().startsWith("B&P") || j.getName().startsWith("IR&D")) {
+                continue;
+            }
+
+            Jobcode temp = j;
+            while (temp != null) {
+                contract.insert(0, temp.getName() + " -> ");
+
+                temp = getJobcode(temp.getParentId());
+            }
+
+            String ans = contract.substring(0, contract.length() - 4);
+
+            complete.add(ans);
+        }
+
+        return complete;
+    }
 }
