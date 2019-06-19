@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Root {
+public class RootUser {
     private Map<String, User> users;
 
     public List<User> getUsers() {

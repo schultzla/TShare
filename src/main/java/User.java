@@ -7,11 +7,11 @@ public class User {
         return id;
     }
 
-    public String getFirst_name() {
+    public String getFirstName() {
         return first_name;
     }
 
-    public String getLast_name() {
+    public String getLastName() {
         return last_name;
     }
 
