@@ -4,18 +4,24 @@
  */
 package MicrosoftGraph;
 
+import Data.SharepointItem;
 import Drivers.TSheetSearch;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.*;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import com.google.common.base.Stopwatch;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.graph.logger.LoggerLevel;
 import Data.User;
 import javax.swing.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -128,6 +134,7 @@ public class AuthenticationManager {
     public void connect(Scanner inputScanner, TSheetSearch search) throws URISyntaxException, IOException, InterruptedException, ExecutionException {
         try {
             mAccessToken = mOAuthService.getAccessToken(getAuthorizationCode(inputScanner));
+            clearList();
             makeAuthenticatedMeRequest(search);
         } finally {
         }
@@ -218,6 +225,8 @@ public class AuthenticationManager {
      * @throws IOException
      */
     private void makeAuthenticatedMeRequest(TSheetSearch search) throws InterruptedException, ExecutionException, IOException {
+        System.out.println("=== Beginning Export ===");
+        Stopwatch watch = Stopwatch.createStarted();
         for (User u : search.getAllUsers()) {
             final OAuthRequest request = new OAuthRequest(Verb.POST, Constants.PROTECTED_RESOURCE_URL);
             request.addHeader("Content-Type", "application/json;charset=UTF-8");
@@ -234,6 +243,40 @@ public class AuthenticationManager {
                 final Response response = mOAuthService.execute(request);
             }
         }
+        watch.stop();
+        long minutes = watch.elapsed(TimeUnit.MINUTES);
+        long seconds = watch.elapsed(TimeUnit.SECONDS) - (minutes * 60);
+        System.out.println("=== Export Complete ===");
+        System.out.println("New contracts exported to SharePoint in " + minutes + " minutes and " + seconds + " seconds.");
+        System.out.println();
+
+    }
+
+    private void clearList() throws InterruptedException, ExecutionException, IOException {
+        System.out.println("=== Clearing Previous List ===");
+        System.out.println("Deleting old entries");
+        Stopwatch watch = Stopwatch.createStarted();
+        final OAuthRequest request = new OAuthRequest(Verb.GET, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/");
+        mOAuthService.signRequest(mAccessToken, request);
+        request.addHeader("Accept", "application/json, text/plain, */*");
+        final Response response = mOAuthService.execute(request);
+        StringBuffer trimmedResponse = new StringBuffer(response.getBody());
+        String trimmed = trimmedResponse.substring(249, trimmedResponse.length() - 1);
+        ArrayList<SharepointItem> items = new Gson().fromJson(trimmed, new
+                TypeToken<ArrayList<SharepointItem>>(){}.getType());
+
+        for (SharepointItem s : items) {
+            final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/" + s.getId());
+            mOAuthService.signRequest(mAccessToken, deleteRequest);
+            final Response deleteResponse = mOAuthService.execute(deleteRequest);
+            System.out.println(deleteResponse.getCode());
+        }
+        watch.stop();
+        long minutes = watch.elapsed(TimeUnit.MINUTES);
+        long seconds = watch.elapsed(TimeUnit.SECONDS) - (minutes * 60);
+        System.out.println("=== Cleared Previous List ===");
+        System.out.println("Old items deleted from list in " + minutes + " minutes and " + seconds + " seconds.");
+        System.out.println();
     }
 
     /**
@@ -250,7 +293,7 @@ public class AuthenticationManager {
      * @throws URISyntaxException
      */
     private String getAuthorizationCode(Scanner inputScanner) throws IOException, URISyntaxException {
-        System.out.println("=== " + Constants.NETWORK_NAME + "'s OAuth Workflow ===");
+        System.out.println("=== TSheets Contract Export ===");
         System.out.println();
         // Obtain the Authorization URL
         final String authorizationUrl = mOAuthService.getAuthorizationUrl();
