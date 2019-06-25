@@ -3,7 +3,7 @@ package Data;
 public class User {
 
     private int id;
-    private String first_name, last_name, username;
+    private String first_name, last_name, username, email;
 
     public int getId() {
         return id;
@@ -20,4 +20,6 @@ public class User {
     public String getUsername() {
         return username;
     }
+
+    public String getEmail() { return email; }
 }

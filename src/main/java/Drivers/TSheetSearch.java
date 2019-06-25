@@ -1,3 +1,5 @@
+package Drivers;
+
 import Data.Jobcode;
 import Data.JobcodeAssignment;
 import Data.User;
@@ -50,7 +52,7 @@ public class TSheetSearch {
 
     }
 
-    public String call(String params) {
+    private String call(String params) {
         String result;
         Response response;
         String url = "https://rest.tsheets.com/api/v1/" + params;
