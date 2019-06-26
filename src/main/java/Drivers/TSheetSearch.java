@@ -14,32 +14,32 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 public class TSheetSearch {
 
     private String token;
-    private List<User> users = new ArrayList<>();
-    private List<Jobcode> jobcodeList = new ArrayList<>();
+    private TreeMap<String, User> users = new TreeMap<>();
     private HashMap<Integer, Jobcode> jobcodes = new HashMap<>();
 
-    public TSheetSearch(String token) {
+    protected TSheetSearch(String token) {
         this.token = token;
 
         int i = 1;
+        List<Jobcode> jobcodeList = new ArrayList<>();
         while(true) {
             String result = call("jobcodes?supplemental_data=no&page=" + i);
 
             if (i > 1) {
-                StringBuffer temp = new StringBuffer(result);
+                StringBuilder temp = new StringBuilder(result);
                 result = temp.substring(0, temp.length() - 1);
             }
-            RootJobcode root = new Gson().fromJson(result.toString(), RootJobcode.class);
+            RootJobcode root = new Gson().fromJson(result, RootJobcode.class);
 
             jobcodeList.addAll(root.getJobcodes());
 
             if (root.getJobcodes().size() % 50 == 0) {
                 i++;
-                continue;
             } else {
                 break;
             }
@@ -69,9 +69,9 @@ public class TSheetSearch {
         try {
             response = client.newCall(request).execute();
 
-            StringBuffer temp = new StringBuffer(response.body().string());
+            StringBuilder temp = new StringBuilder(response.body().string());
             result = temp.substring(17, temp.length() - 18);
-            StringBuffer temp2 = new StringBuffer(result);
+            StringBuilder temp2 = new StringBuilder(result);
             temp2.insert(0, '{');
             temp2.append('}');
 
@@ -86,21 +86,22 @@ public class TSheetSearch {
         return "Failed";
     }
 
-    public List<User> getAllUsers() {
+    public TreeMap<String, User> getAllUsers() {
         int i = 1;
         while(true) {
             String result = call("users?per_page=50&supplemental_data=no&active=yes&page=" + i);
             if (i > 1) {
-                StringBuffer temp = new StringBuffer(result);
+                StringBuilder temp = new StringBuilder(result);
                 result = temp.substring(0, temp.length() - 1);
             }
             RootUser root = new Gson().fromJson(result, RootUser.class);
 
-            users.addAll(root.getUsers());
+            for (User u : root.getUsers()) {
+                users.put(u.getFirstName() + " " + u.getLastName(), u);
+            }
 
             if (root.getUsers().size() % 50 == 0) {
                 i++;
-                continue;
             } else {
                 break;
             }
@@ -110,7 +111,7 @@ public class TSheetSearch {
     }
 
     public User getUserByName(String name) {
-        StringBuffer result = new StringBuffer(call("users?supplemental_data=no&active=yes&first_name=" + name));
+        StringBuilder result = new StringBuilder(call("users?supplemental_data=no&active=yes&first_name=" + name));
         String temp = result.substring(0, result.length() - 1);
 
         RootUser root = new Gson().fromJson(temp, RootUser.class);
@@ -123,9 +124,9 @@ public class TSheetSearch {
     }
 
     public List<Jobcode> getUserContracts(int userId) {
-        StringBuffer result = new StringBuffer(call("jobcode_assignments?supplemental_data=no&user_ids=" + userId));
+        String result = call("jobcode_assignments?supplemental_data=no&user_ids=" + userId);
 
-        RootJobcodeAssignment root = new Gson().fromJson(result.toString(), RootJobcodeAssignment.class);
+        RootJobcodeAssignment root = new Gson().fromJson(result, RootJobcodeAssignment.class);
 
         List<Jobcode> ans = new ArrayList<>();
 
@@ -142,11 +143,22 @@ public class TSheetSearch {
         return jobcodes.get(id);
     }
 
+    public ArrayList<String> getTopLevelContracts(String name) {
+        ArrayList<String> topLevel = new ArrayList<>();
+        for (Jobcode j : getUserContracts(getUserByName(name).getId())) {
+            if (j.getParentId() == 0 && !j.isAssignedToAll() && !j.getName().startsWith("G&A") && !j.getName().startsWith("Overhead")) {
+                topLevel.add(j.getName());
+            }
+        }
+
+        return topLevel;
+    }
+
     public ArrayList<String> getStringContracts(String name) {
         ArrayList<String> complete = new ArrayList<>();
 
         for (Jobcode j : getUserContracts(getUserByName(name).getId())) {
-            StringBuffer contract = new StringBuffer();
+            StringBuilder contract = new StringBuilder();
 
             if (j.getParentId() == 0) {
                 continue;

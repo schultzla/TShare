@@ -12,10 +12,6 @@ public final class DebugLogger {
     private static DebugLogger INSTANCE;
 
 
-    /**
-     * Initialization block called before default constructor
-     * Configures
-     */
     {
         String         loggerName = "com.microsoft.graphsample.connect";
         log        = Logger.getLogger(loggerName);
@@ -33,18 +29,6 @@ public final class DebugLogger {
         return INSTANCE;
     }
 
-
-    /**
-     * Writes an exception to system.out
-     * @param logLevel
-     * @param message
-     * @param exception
-     */
-    public  void writeLog(Level logLevel, String message, Exception exception) {
-        if (Debug.DebugLevel == LoggerLevel.DEBUG) {
-            log.log(logLevel, message, exception);
-        }
-    }
 
     /**
      * Writes info messages to system.out
