@@ -1,14 +1,12 @@
 package Drivers;
 
 import Data.User;
-import MicrosoftGraph.PublicClient;
-
+import MicrosoftGraph.Graph;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -17,19 +15,15 @@ import java.util.concurrent.Executors;
 public class GUIBuilder {
 
     private ArrayList<JCheckBox> boxes;
-    private String effectiveDate;
+    public static String effectiveDate;
     private TreeMap<String, User> users;
     public static JFrame frame;
     public static JTextArea log;
-    private PublicClient publicClient;
+    private Graph graph;
 
-    protected GUIBuilder(TSheetSearch search) {
+    protected GUIBuilder(TSheetSearch search, String token) {
         users = search.getAllUsers();
-        try {
-            publicClient = new PublicClient();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        graph = new Graph(token, search);
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -47,12 +41,11 @@ public class GUIBuilder {
 
         JProgressBar progressBar = new JProgressBar();
 
-        log = new JTextArea(8, 50);
+        log = new JTextArea(8, 80);
         log.setEditable(false);
         log.setFont(log.getFont().deriveFont(12f));
         JScrollPane scroll = new JScrollPane(log);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scroll.setAutoscrolls(true);
 
         JButton update = new JButton("Update Contracts");
         update.setToolTipText("Updates the list of contracts with any new contracts from SharePoint");
@@ -160,33 +153,32 @@ public class GUIBuilder {
 
             progressBar.setIndeterminate(true);
             log.setText("");
-            Executor executor = Executors.newSingleThreadExecutor();
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    update.setEnabled(false);
-                    export.setEnabled(false);
-                    try {
-                        publicClient.startConnect(search, updateUsers, effectiveDate);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
 
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run(){
-                            progressBar.setIndeterminate(false);
-                            update.setEnabled(true);
-                            export.setEnabled(true);
-                        }
-                    });
-                }});
+            Executor executor = Executors.newSingleThreadExecutor();
+            executor.execute(() -> {
+                update.setEnabled(false);
+                export.setEnabled(false);
+                try {
+                    graph.clearList(updateUsers);
+                    graph.exportRecords(updateUsers);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    progressBar.setIndeterminate(false);
+                    update.setEnabled(true);
+                    export.setEnabled(true);
+                });
+            });
+
         });
     }
 
     public static void logMsg(String message) {
         log.append(message);
         log.append("\n");
+        log.setCaretPosition(log.getDocument().getLength());
     }
 }
 

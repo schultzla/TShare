@@ -110,8 +110,8 @@ public class TSheetSearch {
         return users;
     }
 
-    public User getUserByName(String name) {
-        StringBuilder result = new StringBuilder(call("users?supplemental_data=no&active=yes&first_name=" + name));
+    public User getUserByUsername(String username) {
+        StringBuilder result = new StringBuilder(call("users?supplemental_data=no&active=yes&usernames=" + username));
         String temp = result.substring(0, result.length() - 1);
 
         RootUser root = new Gson().fromJson(temp, RootUser.class);
@@ -143,21 +143,10 @@ public class TSheetSearch {
         return jobcodes.get(id);
     }
 
-    public ArrayList<String> getTopLevelContracts(String name) {
-        ArrayList<String> topLevel = new ArrayList<>();
-        for (Jobcode j : getUserContracts(getUserByName(name).getId())) {
-            if (j.getParentId() == 0 && !j.isAssignedToAll() && !j.getName().startsWith("G&A") && !j.getName().startsWith("Overhead")) {
-                topLevel.add(j.getName());
-            }
-        }
-
-        return topLevel;
-    }
-
-    public ArrayList<String> getStringContracts(String name) {
+    public ArrayList<String> getStringContracts(String username) {
         ArrayList<String> complete = new ArrayList<>();
 
-        for (Jobcode j : getUserContracts(getUserByName(name).getId())) {
+        for (Jobcode j : getUserContracts(getUserByUsername(username).getId())) {
             StringBuilder contract = new StringBuilder();
 
             if (j.getParentId() == 0) {
