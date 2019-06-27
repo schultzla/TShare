@@ -1,11 +1,14 @@
 package Drivers;
 
-import Data.Constants;
+import Data.Keys;
 
 public class Driver {
 
+    static TSheetSearch search = new TSheetSearch(Keys.TSHEETS_KEY);
+
     public static void main(String[] args) {
-        TSheetSearch search = new TSheetSearch(Constants.TSHEETS_KEY);
         GUIBuilder gui = new GUIBuilder(search);
     }
+
+
 }

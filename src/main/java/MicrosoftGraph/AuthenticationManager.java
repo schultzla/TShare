@@ -4,10 +4,7 @@
  */
 package MicrosoftGraph;
 
-import Data.DetailedSharepointItem;
-import Data.Fields;
-import Data.SharepointItem;
-import Data.User;
+import Data.*;
 import Drivers.GUIBuilder;
 import Drivers.TSheetSearch;
 import com.github.scribejava.core.builder.ServiceBuilder;
@@ -46,10 +43,10 @@ public class AuthenticationManager {
         if (Debug.DebugLevel == LoggerLevel.DEBUG) {
             DebugLogger.getInstance().writeLog(Level.INFO, "AuthenticationManager initialization block called");
 
-            try (OAuth20Service service = new ServiceBuilder(Constants.CLIENT_ID)
-                    .callback(Constants.REDIRECT_URL)
-                    .scope(Constants.SCOPES)
-                    .apiKey(Constants.CLIENT_ID)
+            try (OAuth20Service service = new ServiceBuilder(Keys.CLIENT_ID)
+                    .callback(Keys.REDIRECT_URL)
+                    .scope(Keys.SCOPES)
+                    .apiKey(Keys.CLIENT_ID)
                     .debugStream(System.out)
                     .debug()
                     .build(MicrosoftAzureAD20Api.instance())
@@ -64,10 +61,10 @@ public class AuthenticationManager {
             }
         }
         else {
-            try (OAuth20Service service = new ServiceBuilder(Constants.CLIENT_ID)
-                    .callback(Constants.REDIRECT_URL)
-                    .scope(Constants.SCOPES)
-                    .apiKey(Constants.CLIENT_ID)
+            try (OAuth20Service service = new ServiceBuilder(Keys.CLIENT_ID)
+                    .callback(Keys.REDIRECT_URL)
+                    .scope(Keys.SCOPES)
+                    .apiKey(Keys.CLIENT_ID)
                     .build(MicrosoftAzureAD20Api.instance())
             ) {
                 mOAuthService = service;
@@ -118,7 +115,7 @@ public class AuthenticationManager {
             }
             GUIBuilder.logMsg("Adding " + u.getName() + suffix + " contracts");
 
-            final OAuthRequest request = new OAuthRequest(Verb.POST, Constants.ADD_RECORD_URL);
+            final OAuthRequest request = new OAuthRequest(Verb.POST, Keys.ADD_RECORD_URL);
             request.addHeader("Content-Type", "application/json;charset=UTF-8");
             String json = "";
             for (String s : search.getStringContracts(u.getFirstName())) {
@@ -141,7 +138,7 @@ public class AuthenticationManager {
 
     private void clearList(ArrayList<User> users) throws InterruptedException, ExecutionException, IOException {
         Stopwatch watch = Stopwatch.createStarted();
-        final OAuthRequest request = new OAuthRequest(Verb.GET, Constants.GET_ALL_ITEMS_URL);
+        final OAuthRequest request = new OAuthRequest(Verb.GET, Keys.GET_ALL_ITEMS_URL);
         mOAuthService.signRequest(mAccessToken, request);
         request.addHeader("Accept", "application/json, text/plain, */*");
         final Response response = mOAuthService.execute(request);
@@ -151,7 +148,7 @@ public class AuthenticationManager {
                 TypeToken<ArrayList<SharepointItem>>(){}.getType());
 
         for (SharepointItem s : items) {
-            final OAuthRequest getItem = new OAuthRequest(Verb.GET, Constants.GET_ITEM_URL + s.getId());
+            final OAuthRequest getItem = new OAuthRequest(Verb.GET, Keys.GET_ITEM_URL + s.getId());
             mOAuthService.signRequest(mAccessToken, getItem);
             getItem.addHeader("Accept", "application/json, text/plain, */*");
             final Response getResponse = mOAuthService.execute(getItem);
@@ -169,7 +166,7 @@ public class AuthenticationManager {
                         suffix = "'s";
                     }
                     GUIBuilder.logMsg("Deleting " + u.getFirstName() + " " + u.getLastName() + suffix + " record");
-                    final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, Constants.DELETE_RECORD_URL + s.getId());
+                    final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, Keys.DELETE_RECORD_URL + s.getId());
                     mOAuthService.signRequest(mAccessToken, deleteRequest);
                     final Response deleteResponse = mOAuthService.execute(deleteRequest);
                 }
@@ -208,6 +205,13 @@ public class AuthenticationManager {
 
 
         return code;
+    }
+
+    public String getAccessToken() {
+        if (mAccessToken == null) {
+            return "";
+        }
+        return mAccessToken.getAccessToken();
     }
 
 }

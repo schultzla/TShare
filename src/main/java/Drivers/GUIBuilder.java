@@ -61,6 +61,8 @@ public class GUIBuilder {
         update.setPreferredSize(new Dimension(120, 23));
         export.setPreferredSize(new Dimension(120, 23));
         JButton beginExport = new JButton("Begin Export");
+        JButton cancelExport = new JButton("Cancel");
+        cancelExport.setPreferredSize(beginExport.getPreferredSize());
         JButton checkAll = new JButton("Check All");
         JButton uncheckAll = new JButton("Uncheck All");
 
@@ -85,6 +87,7 @@ public class GUIBuilder {
         saveEmployees.add(dateLabel);
         saveEmployees.add(date);
         saveEmployees.add(beginExport);
+        saveEmployees.add(cancelExport);
 
         frame.setResizable(false);
         frame.setLayout(new BorderLayout());
@@ -120,6 +123,10 @@ public class GUIBuilder {
             //TODO Add pulling new contracts from TSheets and exporting to SharePoint reference list
 
 
+        });
+
+        cancelExport.addActionListener((ActionEvent e) -> {
+            employeeSelector.setVisible(false);
         });
 
         export.addActionListener((ActionEvent e) -> {
