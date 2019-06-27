@@ -99,17 +99,26 @@ public class AuthenticationManager {
             return;
         } else {
             mAccessToken = mOAuthService.getAccessToken(token);
+            GUIBuilder.logMsg("=== Beginning process ===");
             clearList(updatedUsers);
             makeAuthenticatedMeRequest(search, updatedUsers);
+            GUIBuilder.logMsg("=== Completed ===");
         }
     }
 
     private void makeAuthenticatedMeRequest(TSheetSearch search, ArrayList<User> updatedUsers) throws InterruptedException, ExecutionException, IOException {
         Stopwatch watch = Stopwatch.createStarted();
         for (User u : updatedUsers) {
+            String suffix;
+            if (u.getName().endsWith("s")) {
+                suffix = "'";
+            } else {
+                suffix = "'s";
+            }
+            GUIBuilder.logMsg("Adding " + u.getName() + suffix + " contracts");
+
             final OAuthRequest request = new OAuthRequest(Verb.POST, Constants.PROTECTED_RESOURCE_URL);
             request.addHeader("Content-Type", "application/json;charset=UTF-8");
-            System.out.println ("Adding " + u.getFirstName() + " contracts");
             String json = "";
             for (String s : search.getStringContracts(u.getFirstName())) {
                 json = "{\"fields\": { " +
@@ -126,7 +135,7 @@ public class AuthenticationManager {
         watch.stop();
         long minutes = watch.elapsed(TimeUnit.MINUTES);
         long seconds = watch.elapsed(TimeUnit.SECONDS) - (minutes * 60);
-        JOptionPane.showMessageDialog(GUIBuilder.frame, "New contracts exported to SharePoint in " + minutes + " minutes and " + seconds + " seconds.");
+        GUIBuilder.logMsg("New contracts exported to SharePoint in " + minutes + " minutes and " + seconds + " seconds.");
     }
 
     private void clearList(ArrayList<User> users) throws InterruptedException, ExecutionException, IOException {
@@ -152,6 +161,13 @@ public class AuthenticationManager {
 
             for (User u : users) {
                 if (u.getEmail().equals(newItem.getEmail())) {
+                    String suffix = "";
+                    if (u.getName().endsWith("s")) {
+                        suffix = "'";
+                    } else {
+                        suffix = "'s";
+                    }
+                    GUIBuilder.logMsg("Deleting " + u.getFirstName() + " " + u.getLastName() + suffix + " record");
                     final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/" + s.getId());
                     mOAuthService.signRequest(mAccessToken, deleteRequest);
                     final Response deleteResponse = mOAuthService.execute(deleteRequest);
@@ -161,7 +177,7 @@ public class AuthenticationManager {
         watch.stop();
         long minutes = watch.elapsed(TimeUnit.MINUTES);
         long seconds = watch.elapsed(TimeUnit.SECONDS) - (minutes * 60);
-        JOptionPane.showMessageDialog(GUIBuilder.frame, "Old items deleted from list in " + minutes + " minutes and " + seconds + " seconds.");
+        GUIBuilder.logMsg("Old items deleted from list in " + minutes + " minutes and " + seconds + " seconds.");
     }
 
     private String getAuthorizationCode() throws IOException, URISyntaxException {

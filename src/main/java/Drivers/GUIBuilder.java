@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class GUIBuilder {
 
@@ -17,6 +19,7 @@ public class GUIBuilder {
     private String effectiveDate;
     private TreeMap<String, User> users;
     public static JFrame frame;
+    public static JTextArea log;
 
     protected GUIBuilder(TSheetSearch search) {
         users = search.getAllUsers();
@@ -29,10 +32,20 @@ public class GUIBuilder {
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame("Contract Exporter");
         JPanel panel = new JPanel();
+        JPanel progressPanel = new JPanel();
         JFrame employeeSelector = new JFrame("Select Employees");
         JPanel employeePanel = new JPanel();
         JPanel saveEmployees = new JPanel();
         JPanel checkOptions = new JPanel(new GridLayout(2, 1));
+
+        JProgressBar progressBar = new JProgressBar();
+
+        log = new JTextArea(8, 50);
+        log.setEditable(false);
+        log.setFont(log.getFont().deriveFont(12f));
+        JScrollPane scroll = new JScrollPane(log);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setAutoscrolls(true);
 
         JButton update = new JButton("Update Contracts List");
         update.setToolTipText("Updates the list of contracts with any new contracts from SharePoint");
@@ -51,6 +64,10 @@ public class GUIBuilder {
         panel.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
         panel.add(update);
         panel.add(export);
+        progressPanel.setBorder(new TitledBorder(new EtchedBorder(), "Progress"));
+        progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.Y_AXIS));
+        progressPanel.add(scroll);
+        progressPanel.add(progressBar);
 
         employeePanel.setBorder(new TitledBorder(new EtchedBorder(), "Employees"));
         checkOptions.setBorder(new TitledBorder(new EtchedBorder(), "Quick Select"));
@@ -63,6 +80,7 @@ public class GUIBuilder {
         frame.setResizable(false);
         frame.setLayout(new BorderLayout());
         frame.add(panel, BorderLayout.CENTER);
+        frame.add(progressPanel, BorderLayout.SOUTH);
         frame.pack();
 
         frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
@@ -91,6 +109,7 @@ public class GUIBuilder {
 
         update.addActionListener((ActionEvent e) -> {
             //TODO Add pulling new contracts from TSheets and exporting to SharePoint reference list
+
 
         });
 
@@ -123,14 +142,38 @@ public class GUIBuilder {
             }
             employeeSelector.setVisible(false);
 
-            PublicClient publicClient = null;
-            try {
-                publicClient = new PublicClient();
-                publicClient.startConnect(search, updateUsers, effectiveDate);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            progressBar.setIndeterminate(true);
+            log.setText("");
+            Executor executor = Executors.newSingleThreadExecutor();
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    update.setEnabled(false);
+                    export.setEnabled(false);
+                    PublicClient publicClient = null;
+                    try {
+                        publicClient = new PublicClient();
+                        publicClient.startConnect(search, updateUsers, effectiveDate);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
 
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run(){
+                            progressBar.setIndeterminate(false);
+                            update.setEnabled(true);
+                            export.setEnabled(true);
+                        }
+                    });
+                }});
         });
     }
+
+    public static void logMsg(String message) {
+        log.append(message);
+        log.append("\n");
+    }
 }
+
+
