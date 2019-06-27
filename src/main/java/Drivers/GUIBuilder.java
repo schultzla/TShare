@@ -8,6 +8,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -20,9 +21,15 @@ public class GUIBuilder {
     private TreeMap<String, User> users;
     public static JFrame frame;
     public static JTextArea log;
+    private PublicClient publicClient;
 
     protected GUIBuilder(TSheetSearch search) {
         users = search.getAllUsers();
+        try {
+            publicClient = new PublicClient();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -47,10 +54,12 @@ public class GUIBuilder {
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.setAutoscrolls(true);
 
-        JButton update = new JButton("Update Contracts List");
+        JButton update = new JButton("Update Contracts");
         update.setToolTipText("Updates the list of contracts with any new contracts from SharePoint");
         JButton export = new JButton("Export Contracts");
         export.setToolTipText("Updates selected employees contracts");
+        update.setPreferredSize(new Dimension(120, 23));
+        export.setPreferredSize(new Dimension(120, 23));
         JButton beginExport = new JButton("Begin Export");
         JButton checkAll = new JButton("Check All");
         JButton uncheckAll = new JButton("Uncheck All");
@@ -150,9 +159,7 @@ public class GUIBuilder {
                 public void run() {
                     update.setEnabled(false);
                     export.setEnabled(false);
-                    PublicClient publicClient = null;
                     try {
-                        publicClient = new PublicClient();
                         publicClient.startConnect(search, updateUsers, effectiveDate);
                     } catch (Exception ex) {
                         ex.printStackTrace();

@@ -104,6 +104,7 @@ public class AuthenticationManager {
             makeAuthenticatedMeRequest(search, updatedUsers);
             GUIBuilder.logMsg("=== Completed ===");
         }
+
     }
 
     private void makeAuthenticatedMeRequest(TSheetSearch search, ArrayList<User> updatedUsers) throws InterruptedException, ExecutionException, IOException {
@@ -117,7 +118,7 @@ public class AuthenticationManager {
             }
             GUIBuilder.logMsg("Adding " + u.getName() + suffix + " contracts");
 
-            final OAuthRequest request = new OAuthRequest(Verb.POST, Constants.PROTECTED_RESOURCE_URL);
+            final OAuthRequest request = new OAuthRequest(Verb.POST, Constants.ADD_RECORD_URL);
             request.addHeader("Content-Type", "application/json;charset=UTF-8");
             String json = "";
             for (String s : search.getStringContracts(u.getFirstName())) {
@@ -140,7 +141,7 @@ public class AuthenticationManager {
 
     private void clearList(ArrayList<User> users) throws InterruptedException, ExecutionException, IOException {
         Stopwatch watch = Stopwatch.createStarted();
-        final OAuthRequest request = new OAuthRequest(Verb.GET, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/");
+        final OAuthRequest request = new OAuthRequest(Verb.GET, Constants.GET_ALL_ITEMS_URL);
         mOAuthService.signRequest(mAccessToken, request);
         request.addHeader("Accept", "application/json, text/plain, */*");
         final Response response = mOAuthService.execute(request);
@@ -150,7 +151,7 @@ public class AuthenticationManager {
                 TypeToken<ArrayList<SharepointItem>>(){}.getType());
 
         for (SharepointItem s : items) {
-            final OAuthRequest getItem = new OAuthRequest(Verb.GET, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/" + s.getId());
+            final OAuthRequest getItem = new OAuthRequest(Verb.GET, Constants.GET_ITEM_URL + s.getId());
             mOAuthService.signRequest(mAccessToken, getItem);
             getItem.addHeader("Accept", "application/json, text/plain, */*");
             final Response getResponse = mOAuthService.execute(getItem);
@@ -168,7 +169,7 @@ public class AuthenticationManager {
                         suffix = "'s";
                     }
                     GUIBuilder.logMsg("Deleting " + u.getFirstName() + " " + u.getLastName() + suffix + " record");
-                    final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, "https://graph.microsoft.com/v1.0/sites/diskenterprisesolutions.sharepoint.com,b1b85f90-52ad-4c60-a1ce-b740797482d5,a80ce79c-2ab3-42e0-b91e-923332c20ae4/lists/4bdbf119-7849-4c26-92d3-126b7bf2d912/items/" + s.getId());
+                    final OAuthRequest deleteRequest = new OAuthRequest(Verb.DELETE, Constants.DELETE_RECORD_URL + s.getId());
                     mOAuthService.signRequest(mAccessToken, deleteRequest);
                     final Response deleteResponse = mOAuthService.execute(deleteRequest);
                 }
