@@ -11,10 +11,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 public class TSheetSearch {
 
@@ -141,6 +138,34 @@ public class TSheetSearch {
 
     public Jobcode getJobcode(int id) {
         return jobcodes.get(id);
+    }
+
+    public HashSet<String> getUniqueJobcodes() {
+        HashSet<String> complete = new HashSet<>();
+        for (Jobcode j : jobcodes.values()) {
+            StringBuilder contract = new StringBuilder();
+
+            if (j.getParentId() == 0) {
+                continue;
+            } else if (j.hasChild()) {
+                continue;
+            } else if (j.isAssignedToAll()) {
+                continue;
+            }
+
+            Jobcode temp = j;
+            while (temp != null) {
+                contract.insert(0, temp.getName() + " -> ");
+
+                temp = getJobcode(temp.getParentId());
+            }
+
+            String ans = contract.substring(0, contract.length() - 4);
+
+            complete.add(ans);
+        }
+
+        return complete;
     }
 
     public ArrayList<String> getStringContracts(String username) {

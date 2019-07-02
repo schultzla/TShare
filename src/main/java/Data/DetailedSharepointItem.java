@@ -2,7 +2,15 @@ package Data;
 
 public class DetailedSharepointItem {
 
-    private String Email, id, Value;
+    /*
+    Title is the contract for the ContractsRef list due to SharePoints terrible renaming system
+     */
+
+    private String Email, id, Value, Title;
+
+    public String getContract() {
+        return Title;
+    }
 
     public String getEmail() {
         return Email;

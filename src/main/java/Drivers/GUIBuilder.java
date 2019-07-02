@@ -7,6 +7,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -25,13 +26,15 @@ public class GUIBuilder {
         users = search.getAllUsers();
         graph = new Graph(token, search);
 
+        Driver.window.setVisible(false);
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        frame = new JFrame("Contract Exporter");
+        frame = new JFrame("TShare");
         JPanel panel = new JPanel();
         JPanel progressPanel = new JPanel();
         JFrame employeeSelector = new JFrame("Select Employees");
@@ -44,11 +47,13 @@ public class GUIBuilder {
         log = new JTextArea(8, 80);
         log.setEditable(false);
         log.setFont(log.getFont().deriveFont(12f));
+        log.setForeground(Color.WHITE);
         JScrollPane scroll = new JScrollPane(log);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         JButton update = new JButton("Update Contracts");
-        update.setToolTipText("Updates the list of contracts with any new contracts from SharePoint");
+        update.setToolTipText("Updates the contract reference list with new contracts from TSheets");
         JButton export = new JButton("Export Contracts");
         export.setToolTipText("Updates selected employees contracts");
         update.setPreferredSize(new Dimension(120, 23));
@@ -113,8 +118,27 @@ public class GUIBuilder {
         employeeSelector.pack();
 
         update.addActionListener((ActionEvent e) -> {
-            //TODO Add pulling new contracts from TSheets and exporting to SharePoint reference list
+            progressBar.setIndeterminate(true);
 
+            Executor executor = Executors.newSingleThreadExecutor();
+            executor.execute(() -> {
+                update.setEnabled(false);
+                export.setEnabled(false);
+                try {
+                    try {
+                        graph.updateContractReferences();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    progressBar.setIndeterminate(false);
+                    update.setEnabled(true);
+                    export.setEnabled(true);
+                });
+            });
 
         });
 
@@ -152,7 +176,6 @@ public class GUIBuilder {
             employeeSelector.setVisible(false);
 
             progressBar.setIndeterminate(true);
-            log.setText("");
 
             Executor executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> {
@@ -179,6 +202,23 @@ public class GUIBuilder {
         log.append(message);
         log.append("\n");
         log.setCaretPosition(log.getDocument().getLength());
+    }
+
+    public static void notif(String message, TrayIcon.MessageType type){
+        if (SystemTray.isSupported()) {
+            SystemTray tray = SystemTray.getSystemTray();
+            Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+            TrayIcon trayIcon = new TrayIcon(image, "TSheets Contract Exporter");
+            trayIcon.setImageAutoSize(true);
+            try {
+                tray.add(trayIcon);
+            } catch (AWTException e) {
+                e.printStackTrace();
+            }
+
+            trayIcon.displayMessage("TShare", message, type);
+        }
     }
 }
 
