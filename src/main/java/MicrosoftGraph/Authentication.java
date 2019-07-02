@@ -1,7 +1,11 @@
 package MicrosoftGraph;
 
+import Data.DetailedSharepointItem;
+import Data.Fields;
 import Data.Keys;
+import Data.SharepointItem;
 import com.google.gson.Gson;
+import jdk.nashorn.internal.runtime.SharedPropertyMap;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -44,5 +48,26 @@ public class Authentication {
         }
 
         return token;
+    }
+
+    public String authorizeTSheets(Token token) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(Keys.TSHEETS_KEY_URL)
+                .addHeader("Accept", "application/json, text/plain, */*")
+                .addHeader("Authorization", "Bearer " + token.getToken())
+                .build();
+
+        String response = "";
+        try {
+            response = client.newCall(request).execute().body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Fields field = new Gson().fromJson(response, Fields.class);
+        DetailedSharepointItem item = field.getFields();
+
+        return item.getKey();
     }
 }
