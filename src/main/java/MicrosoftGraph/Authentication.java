@@ -3,9 +3,7 @@ package MicrosoftGraph;
 import Data.DetailedSharepointItem;
 import Data.Fields;
 import Data.Keys;
-import Data.SharepointItem;
 import com.google.gson.Gson;
-import jdk.nashorn.internal.runtime.SharedPropertyMap;
 import okhttp3.*;
 
 import java.io.IOException;

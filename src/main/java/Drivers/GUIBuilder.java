@@ -47,7 +47,6 @@ public class GUIBuilder {
         log = new JTextArea(8, 80);
         log.setEditable(false);
         log.setFont(log.getFont().deriveFont(12f));
-        log.setForeground(Color.WHITE);
         JScrollPane scroll = new JScrollPane(log);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
