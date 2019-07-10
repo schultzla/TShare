@@ -68,16 +68,18 @@ public class Graph {
                 if (contracts.contains(newItem.getContract())) {
                     contracts.remove(newItem.getContract());
                 } else {
-                    Request deleteItem = new Request.Builder()
-                            .url(Keys.CONTRACTS_URL + newItem.getId())
-                            .addHeader("Authorization", "Bearer " + token)
-                            .delete()
-                            .build();
+                    if (!newItem.getContract().equals("Indirect")) {
+                        Request deleteItem = new Request.Builder()
+                                .url(Keys.CONTRACTS_URL + newItem.getId())
+                                .addHeader("Authorization", "Bearer " + token)
+                                .delete()
+                                .build();
 
-                    try {
-                        client.newCall(deleteItem).execute();
-                    } catch (SocketTimeoutException e) {
-                        continue;
+                        try {
+                            client.newCall(deleteItem).execute();
+                        } catch (SocketTimeoutException e) {
+                            continue;
+                        }
                     }
                 }
             }

@@ -11,7 +11,11 @@ public class Driver {
 
     public static void main(String[] args) {
         Driver driver = new Driver();
-        driver.loadingScreen();
+        try {
+            driver.loadingScreen();
+        } catch (NullPointerException e) {
+            window.setVisible(false);
+        }
 
         Token token = new Authentication().authorize();
         String key = new Authentication().authorizeTSheets(token);
@@ -20,7 +24,7 @@ public class Driver {
         GUIBuilder gui = new GUIBuilder(search, token.getToken());
     }
 
-    public void loadingScreen() {
+    public void loadingScreen() throws NullPointerException {
         window = new JWindow();
 
         String pathToImage = "loading.gif";
