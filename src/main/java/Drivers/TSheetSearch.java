@@ -94,7 +94,7 @@ public class TSheetSearch {
             RootUser root = new Gson().fromJson(result, RootUser.class);
 
             for (User u : root.getUsers()) {
-                users.put(u.getFirstName() + " " + u.getLastName(), u);
+                users.put(u.getLastName() + ", " + u.getFirstName(), u);
             }
 
             if (root.getUsers().size() % 50 == 0) {

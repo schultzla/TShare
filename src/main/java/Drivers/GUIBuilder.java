@@ -55,8 +55,8 @@ public class GUIBuilder {
         update.setToolTipText("Updates the contract reference list with new contracts from TSheets");
         JButton export = new JButton("Export Contracts");
         export.setToolTipText("Updates selected employees contracts");
-        update.setPreferredSize(new Dimension(120, 23));
-        export.setPreferredSize(new Dimension(120, 23));
+        update.setPreferredSize(new Dimension(200, 23));
+        export.setPreferredSize(new Dimension(200, 23));
         JButton beginExport = new JButton("Begin Export");
         JButton cancelExport = new JButton("Cancel");
         cancelExport.setPreferredSize(beginExport.getPreferredSize());
@@ -105,7 +105,7 @@ public class GUIBuilder {
         boxes = new ArrayList<>();
 
         for (User u : users.values()) {
-            boxes.add(new JCheckBox(u.getFirstName() + " " + u.getLastName()));
+            boxes.add(new JCheckBox(u.getLastName() + ", " + u.getFirstName()));
         }
 
         for(JCheckBox b : boxes) {
