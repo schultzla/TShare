@@ -119,6 +119,15 @@ public class TSheetSearch {
                 }
             }
             System.out.println(u.getName() + " -> " + "PTO: " + paidTimeOff + ", Indirect: " + totalIndirect);
+            /*
+            Now need to add each person to the SharePoint list.
+            Update their item (for the specific year), set month indirect to totalIndirect and month PTO to paidTimeOff
+                - Get list
+                - Get items
+                - For <EMPLOYEE> item of <YEAR>, update fields (is this POST or something else?)
+                *Make this function in the Microsoft Graph class*
+            Also update the calculation fields? Don't know the logistics of this, could be super slow and outweigh benefits
+             */
         }
     }
 
