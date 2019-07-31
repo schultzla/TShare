@@ -1,6 +1,7 @@
 package Drivers;
 
 import MicrosoftGraph.Authentication;
+import MicrosoftGraph.Graph;
 import MicrosoftGraph.Token;
 import javax.swing.*;
 
@@ -10,20 +11,19 @@ public class Driver {
     public static JWindow window;
 
     public static void main(String[] args) {
+        Graph.getMonthForInt(1);
         Driver driver = new Driver();
-        /*try {
+        try {
             driver.loadingScreen();
         } catch (NullPointerException e) {
             window.setVisible(false);
-        }*/
+        }
 
         Token token = new Authentication().authorize();
         String key = new Authentication().authorizeTSheets(token);
         search = new TSheetSearch(key);
 
-        search.calcMonthlyHours("01", "2019");
-
-        //GUIBuilder gui = new GUIBuilder(search, token.getToken());
+        GUIBuilder gui = new GUIBuilder(search, token.getToken());
     }
 
     public void loadingScreen() throws NullPointerException {

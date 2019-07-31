@@ -85,7 +85,8 @@ public class TSheetSearch {
         return "Failed";
     }
 
-    public void calcMonthlyHours(String month, String year) {
+    public HashMap<User, Double[]> calcMonthlyHours(String month, String year) {
+        HashMap<User, Double[]> empHours = new HashMap<>();
         String startDate = year + "-" + month + "-01", endDate = year + "-" + month + "-31";
         OkHttpClient client = new OkHttpClient();
 
@@ -118,17 +119,13 @@ public class TSheetSearch {
                     totalIndirect += hours;
                 }
             }
-            System.out.println(u.getName() + " -> " + "PTO: " + paidTimeOff + ", Indirect: " + totalIndirect);
-            /*
-            Now need to add each person to the SharePoint list.
-            Update their item (for the specific year), set month indirect to totalIndirect and month PTO to paidTimeOff
-                - Get list
-                - Get items
-                - For <EMPLOYEE> item of <YEAR>, update fields (is this POST or something else?)
-                *Make this function in the Microsoft Graph class*
-            Also update the calculation fields? Don't know the logistics of this, could be super slow and outweigh benefits
-             */
+            Double[] hrs = new Double[2];
+            hrs[0] = paidTimeOff;
+            hrs[1] = totalIndirect;
+            empHours.put(u, hrs);
         }
+
+        return empHours;
     }
 
     public TreeMap<String, User> getAllUsers() {
