@@ -1,13 +1,17 @@
 package Drivers;
 
+import Data.Record;
 import Data.User;
 import MicrosoftGraph.Graph;
+import com.poiji.exception.InvalidExcelFileExtension;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +23,18 @@ import java.util.concurrent.Executors;
 
 public class GUIBuilder {
 
-    private ArrayList<JCheckBox> boxes;
+    private ArrayList<JCheckBox> employeeBoxes;
     public static String effectiveDate;
     private TreeMap<String, User> users;
     public static JFrame frame;
     public static JTextArea log;
     private Graph graph;
+    static String path;
+    static String fileName;
+    static int minLates = 0;
+    static Analyzer analyzer;
+    static JCheckBox[] boxes;
+    static HashSet<String> defaultCodes = new HashSet<>(), codes = new HashSet<>();
 
     protected GUIBuilder(TSheetSearch search, String token) {
         users = search.getAllUsers();
@@ -38,9 +48,131 @@ public class GUIBuilder {
             e.printStackTrace();
         }
 
+
         java.net.URL url = ClassLoader.getSystemResource("tsheets.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
+
+        defaultCodes = new HashSet<String>(Arrays.asList(new String[]{"Vacation", "Holiday", "Sick", "Leave without Pay", "Ownership Vacation", "Jury Duty", "Bereavement"}));
+
+        /*
+         * Buttons
+         */
+        JButton calculateLateDays = new JButton("Calculate");
+        JButton configure = new JButton("Configure");
+        JButton setMinLates = new JButton("Set Min Lates");
+        JButton addFilters = new JButton("Jobcode Filter");
+        JButton saveFilters = new JButton("Save");
+        JButton copyClip = new JButton("Copy to Clipboard");
+        JButton upload = new JButton("Upload File");
+
+        JPanel analyzerPnl = new JPanel();
+        analyzerPnl.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
+        analyzerPnl.setLayout(new GridLayout());
+
+        analyzerPnl.add(calculateLateDays);
+        analyzerPnl.add(configure);
+        analyzerPnl.add(copyClip);
+        analyzerPnl.add(upload);
+
+        calculateLateDays.setEnabled(false);
+        configure.setEnabled(false);
+
+        JFrame configureFrame = new JFrame("Config");
+        JPanel analyzerConfig = new JPanel();
+        analyzerConfig.setBorder(new TitledBorder(new EtchedBorder(), "Configurations"));
+
+        configureFrame.add(analyzerConfig);
+        configureFrame.setResizable(false);
+
+        analyzerConfig.add(setMinLates);
+        configureFrame.setLocationRelativeTo(frame);
+        analyzerConfig.add(addFilters);
+
+        configureFrame.pack();
+
+        /*
+        Build filters frame/panel
+         */
+        JPanel filterPanel = new JPanel();
+        JFrame filters = new JFrame("Customize Filters");
+        filterPanel.setBorder(new TitledBorder(new EtchedBorder(), "Filters"));
+        filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.Y_AXIS));
+
+        filters.add(filterPanel);
+
+        filters.setLocationRelativeTo(frame);
+
+
+
+        filters.setResizable(false);
+
+        filterPanel.add(saveFilters);
+        filters.pack();
+
+        /*
+         * Button actions
+         */
+
+        copyClip.addActionListener((ActionEvent e) -> {
+            StringSelection selection = new StringSelection(log.getText());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+        });
+
+        setMinLates.addActionListener((ActionEvent e) -> {
+            try {
+                minLates = Integer.valueOf(JOptionPane.showInputDialog("Enter the minimum amount of late entries someone needs to be displayed"));
+            } catch (Exception ex) {
+                minLates = 0;
+            }
+        });
+
+        configure.addActionListener((ActionEvent e) -> {
+            configureFrame.setVisible(true);
+
+        });
+
+        addFilters.addActionListener((ActionEvent e) -> {
+            codes.clear();
+            filters.setVisible(true);
+
+            saveFilters.addActionListener((ActionEvent ev) -> {
+                /*
+                 * Build exemption filters for jobcodes
+                 */
+                for (JCheckBox b : boxes) {
+                    if (b.isSelected()) {
+                        codes.add(b.getText());
+                    }
+                }
+
+                filters.dispose();
+            });
+
+        });
+
+        calculateLateDays.addActionListener((ActionEvent e) -> {
+            log.setText("");
+            analyzer.analyze(codes);
+
+            log.append("File Name: " + fileName + "\n");
+            SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+            Date date = new Date();
+            log.append("Date Ran: " + df.format(date) + "\n");
+            log.append("Minimum Late: " + minLates + "\n");
+            log.append("==========\n");
+
+            for (String s : analyzer.employeeLateCounts.keySet()) {
+                if (analyzer.employeeLateCounts.get(s) >= minLates) {
+                    Record temp = analyzer.getRecord(s);
+                    String name = temp.firstName + " " + temp.lastName;
+
+                    log.append("Employee: " + name + ", Late Entries: " + analyzer.employeeLateCounts.get(s));
+                    log.append("\n");
+                }
+            }
+        });
 
 
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -95,6 +227,8 @@ public class GUIBuilder {
         checkOptions.setBorder(new TitledBorder(new EtchedBorder(), "Quick Select"));
         saveEmployees.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
         updateHoursOptions.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
+        updateHoursOptions.setLayout(new GridLayout(0, 4));
+        JButton updateToCurrent = new JButton("Update from Selected to Current Month");
 
         saveEmployees.add(dateLabel);
         saveEmployees.add(date);
@@ -106,7 +240,6 @@ public class GUIBuilder {
         JComboBox months = new JComboBox(mnth);
         JComboBox years = new JComboBox(yr);
         JButton confirmUpdate = new JButton("Update");
-        JCheckBox updateToCurrent = new JCheckBox("Update from Selected to Current Month");
 
         updateHoursOptions.add(months);
         updateHoursOptions.add(years);
@@ -116,6 +249,7 @@ public class GUIBuilder {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Contract Exporter", panel);
         tabbedPane.addTab("Hours Updater", updateHoursOptions);
+        tabbedPane.addTab("Late Entries Analyzer", analyzerPnl);
 
         frame.setResizable(false);
         frame.setLayout(new BorderLayout());
@@ -134,13 +268,13 @@ public class GUIBuilder {
         employeeSelector.add(checkOptions, BorderLayout.EAST);
 
 
-        boxes = new ArrayList<>();
+        employeeBoxes = new ArrayList<>();
 
         for (User u : users.values()) {
-            boxes.add(new JCheckBox(u.getLastName() + ", " + u.getFirstName()));
+            employeeBoxes.add(new JCheckBox(u.getLastName() + ", " + u.getFirstName()));
         }
 
-        for(JCheckBox b : boxes) {
+        for(JCheckBox b : employeeBoxes) {
             employeePanel.add(b);
         }
         checkOptions.add(checkAll);
@@ -165,7 +299,40 @@ public class GUIBuilder {
                 manual.setEnabled(false);
                 try {
                     try {
-                        graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), updateToCurrent.isSelected());
+                        graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), false);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    progressBar.setIndeterminate(false);
+                    update.setEnabled(true);
+                    export.setEnabled(true);
+                    manual.setEnabled(true);
+                });
+            });
+        });
+
+        updateToCurrent.addActionListener((ActionEvent e) -> {
+            StringBuilder month = new StringBuilder(String.valueOf(months.getSelectedIndex() + 1));
+            if (month.length() == 1) {
+                month.insert(0, "0");
+            }
+            String year = years.getSelectedItem().toString();
+
+
+            progressBar.setIndeterminate(true);
+
+            Executor executor = Executors.newSingleThreadExecutor();
+            executor.execute(() -> {
+                update.setEnabled(false);
+                export.setEnabled(false);
+                manual.setEnabled(false);
+                try {
+                    try {
+                        graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), true);
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }                } catch (Exception ex) {
@@ -237,10 +404,34 @@ public class GUIBuilder {
             }
         });
 
+        upload.addActionListener((ActionEvent e) -> {
+            if (fileOpener(calculateLateDays, configure)) {
+                boxes = new JCheckBox[analyzer.getCodes().size()];
+                String[] arrCodes = new String[analyzer.getCodes().size()];
+
+                int j = 0;
+                for (String s : analyzer.getCodes()) {
+                    arrCodes[j] = s;
+                    j++;
+                }
+
+                for(int i = 0; i < boxes.length; i++) {
+                    boxes[i] = new JCheckBox(arrCodes[i]);
+                }
+
+                for(JCheckBox b : boxes) {
+                    if (defaultCodes.contains(b.getText())) {
+                        b.setSelected(true);
+                    }
+                    filterPanel.add(b);
+                }
+            }
+        });
+
         beginExport.addActionListener((ActionEvent e) -> {
             effectiveDate = date.getText();
             ArrayList<User> updateUsers = new ArrayList<>();
-            for (JCheckBox box : boxes) {
+            for (JCheckBox box : employeeBoxes) {
                 if (box.isSelected()) {
                     updateUsers.add(users.get(box.getText()));
                 }
@@ -293,6 +484,31 @@ public class GUIBuilder {
 
             trayIcon.displayMessage("TShare", message, type);
         }
+    }
+
+    public static boolean fileOpener(JButton calculateLate, JButton config) {
+        /*
+         * Display file chooser on launch, don't close until file chosen
+         */
+        while (path == null) {
+            JFileChooser fileChooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx");
+            fileChooser.setFileFilter(filter);
+            int returnValue = fileChooser.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                fileName = selectedFile.getName();
+                path = selectedFile.getAbsolutePath();
+                calculateLate.setEnabled(true);
+                config.setEnabled(true);
+                analyzer = new Analyzer(path);
+                return true;
+            } else if (returnValue == JFileChooser.CANCEL_OPTION) {
+                break;
+            }
+        }
+
+        return false;
     }
 }
 
