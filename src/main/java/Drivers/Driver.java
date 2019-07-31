@@ -11,17 +11,19 @@ public class Driver {
 
     public static void main(String[] args) {
         Driver driver = new Driver();
-        try {
+        /*try {
             driver.loadingScreen();
         } catch (NullPointerException e) {
             window.setVisible(false);
-        }
+        }*/
 
         Token token = new Authentication().authorize();
         String key = new Authentication().authorizeTSheets(token);
         search = new TSheetSearch(key);
 
-        GUIBuilder gui = new GUIBuilder(search, token.getToken());
+        search.calcMonthlyHours("01", "2019");
+
+        //GUIBuilder gui = new GUIBuilder(search, token.getToken());
     }
 
     public void loadingScreen() throws NullPointerException {
