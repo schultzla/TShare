@@ -8,6 +8,7 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -34,7 +35,7 @@ public class GUIBuilder {
             e.printStackTrace();
         }
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        frame = new JFrame("TShare");
+        frame = new JFrame("TSheets Time Sheet Criteria Generator");
         JPanel panel = new JPanel();
         JPanel progressPanel = new JPanel();
         JFrame employeeSelector = new JFrame("Select Employees");
@@ -44,19 +45,22 @@ public class GUIBuilder {
 
         JProgressBar progressBar = new JProgressBar();
 
-        log = new JTextArea(8, 80);
+        log = new JTextArea(15, 80);
         log.setEditable(false);
         log.setFont(log.getFont().deriveFont(12f));
         JScrollPane scroll = new JScrollPane(log);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        JButton update = new JButton("Update Contracts");
+        JButton update = new JButton("Update TSheets Customers");
         update.setToolTipText("Updates the contract reference list with new contracts from TSheets");
-        JButton export = new JButton("Export Contracts");
+        JButton export = new JButton("Update Customers Assigned to Employees");
         export.setToolTipText("Updates selected employees contracts");
-        update.setPreferredSize(new Dimension(200, 23));
-        export.setPreferredSize(new Dimension(200, 23));
+        JButton manual = new JButton("Manually Update Customers Info");
+        manual.setToolTipText("Opens the SharePoint list to update notes, PoP, etc.");
+        update.setPreferredSize(new Dimension(300, 23));
+        export.setPreferredSize(new Dimension(300, 23));
+        manual.setPreferredSize(new Dimension(300, 23));
         JButton beginExport = new JButton("Begin Export");
         JButton cancelExport = new JButton("Cancel");
         cancelExport.setPreferredSize(beginExport.getPreferredSize());
@@ -71,6 +75,7 @@ public class GUIBuilder {
 
         panel.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
         panel.add(update);
+        panel.add(manual);
         panel.add(export);
         progressPanel.setBorder(new TitledBorder(new EtchedBorder(), "Progress"));
         progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.Y_AXIS));
@@ -123,6 +128,7 @@ public class GUIBuilder {
             executor.execute(() -> {
                 update.setEnabled(false);
                 export.setEnabled(false);
+                manual.setEnabled(false);
                 try {
                     try {
                         graph.updateContractReferences();
@@ -136,9 +142,16 @@ public class GUIBuilder {
                     progressBar.setIndeterminate(false);
                     update.setEnabled(true);
                     export.setEnabled(true);
+                    manual.setEnabled(true);
                 });
             });
 
+        });
+
+        manual.addActionListener((ActionEvent e) -> {
+            try {
+                Desktop.getDesktop().browse(new URL("https://diskenterprisesolutions.sharepoint.com/sites/CorpOp/ReqForm/Lists/ContractReference/AllItems.aspx").toURI());
+            } catch (Exception ex) {}
         });
 
         cancelExport.addActionListener((ActionEvent e) -> {
@@ -180,6 +193,7 @@ public class GUIBuilder {
             executor.execute(() -> {
                 update.setEnabled(false);
                 export.setEnabled(false);
+                manual.setEnabled(false);
                 try {
                     graph.clearList(updateUsers);
                     graph.exportRecords(updateUsers);
@@ -191,6 +205,7 @@ public class GUIBuilder {
                     progressBar.setIndeterminate(false);
                     update.setEnabled(true);
                     export.setEnabled(true);
+                    manual.setEnabled(true);
                 });
             });
 
