@@ -53,7 +53,7 @@ public class Graph {
 
             while (monthInt < currentMonth) {
                 GUIBuilder.logMsg("=== Updating " + monthName + " Actual Hours ===");
-                HashMap<User, Double[]> empHours = search.calcMonthlyHours(month, year);
+                HashMap<User, Double[]> empHours = search.calcMonthlyHours(String.valueOf(monthInt), year);
 
                 Request request = new Request.Builder()
                         .url(Keys.ANNUAL_PLAN_URL)
