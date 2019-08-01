@@ -95,19 +95,16 @@ public class GUIBuilder {
         Build filters frame/panel
          */
         JPanel filterPanel = new JPanel();
-        JFrame filters = new JFrame("Customize Filters");
+        JFrame filters = new JFrame();
         filterPanel.setBorder(new TitledBorder(new EtchedBorder(), "Filters"));
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.Y_AXIS));
-
-        filters.add(filterPanel);
 
         filters.setLocationRelativeTo(frame);
 
 
 
         filters.setResizable(false);
-
-        filterPanel.add(saveFilters);
+        filters.add(filterPanel);
         filters.pack();
 
         /*
@@ -187,6 +184,9 @@ public class GUIBuilder {
         JPanel checkOptions = new JPanel(new GridLayout(2, 1));
         JPanel updateHoursOptions = new JPanel();
         JProgressBar progressBar = new JProgressBar();
+
+        configureFrame.setIconImage(img);
+        filters.setIconImage(img);
 
         log = new JTextArea(15, 80);
         log.setEditable(false);
@@ -405,7 +405,7 @@ public class GUIBuilder {
         });
 
         upload.addActionListener((ActionEvent e) -> {
-            if (fileOpener(calculateLateDays, configure)) {
+            if (fileOpener(calculateLateDays, configure, calculateLateDays.isEnabled())) {
                 boxes = new JCheckBox[analyzer.getCodes().size()];
                 String[] arrCodes = new String[analyzer.getCodes().size()];
 
@@ -425,6 +425,9 @@ public class GUIBuilder {
                     }
                     filterPanel.add(b);
                 }
+
+                filterPanel.add(saveFilters);
+                filters.pack();
             }
         });
 
@@ -486,15 +489,12 @@ public class GUIBuilder {
         }
     }
 
-    public static boolean fileOpener(JButton calculateLate, JButton config) {
-        /*
-         * Display file chooser on launch, don't close until file chosen
-         */
-        while (path == null) {
+    public static boolean fileOpener(JButton calculateLate, JButton config, boolean newFile) {
+        while (path == null || newFile) {
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx");
             fileChooser.setFileFilter(filter);
-            int returnValue = fileChooser.showOpenDialog(null);
+            int returnValue = fileChooser.showOpenDialog(frame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 fileName = selectedFile.getName();
