@@ -251,6 +251,22 @@ public class GUIBuilder {
         tabbedPane.addTab("Hours Updater", updateHoursOptions);
         tabbedPane.addTab("Late Entries Analyzer", analyzerPnl);
 
+        JPanel birthdayCalcPnl = new JPanel();
+        birthdayCalcPnl.setBorder(new TitledBorder(new EtchedBorder(), "Options"));
+        birthdayCalcPnl.setLayout(new GridLayout());
+        JButton birthdayUpload = new JButton("Upload File");
+        JButton birthdayCopy = new JButton("Copy to Clipboard");
+        JButton birthdayCalc = new JButton("Calculate");
+
+        birthdayCalc.setEnabled(false);
+
+        birthdayCalcPnl.add(birthdayCalc);
+        birthdayCalcPnl.add(birthdayCopy);
+        birthdayCalcPnl.add(birthdayUpload);
+
+        tabbedPane.addTab("Birthday Analyzer", birthdayCalcPnl);
+
+
         frame.setResizable(false);
         frame.setLayout(new BorderLayout());
         frame.add(tabbedPane, BorderLayout.CENTER);
@@ -281,6 +297,22 @@ public class GUIBuilder {
         checkOptions.add(uncheckAll);
         employeePanel.setLayout(new GridLayout(0, 6));
         employeeSelector.pack();
+
+        birthdayCalc.addActionListener((ActionEvent e) -> {
+
+        });
+
+        birthdayCopy.addActionListener((ActionEvent e) -> {
+            StringSelection selection = new StringSelection(log.getText());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+        });
+
+        birthdayUpload.addActionListener((ActionEvent e) -> {
+            if(fileOpener(calculateLateDays, configure, calculateLateDays.isEnabled())) {
+                birthdayCalc.setEnabled(true);
+            }
+        });
 
         confirmUpdate.addActionListener((ActionEvent e) -> {
            StringBuilder month = new StringBuilder(String.valueOf(months.getSelectedIndex() + 1));
@@ -492,7 +524,7 @@ public class GUIBuilder {
     public static boolean fileOpener(JButton calculateLate, JButton config, boolean newFile) {
         while (path == null || newFile) {
             JFileChooser fileChooser = new JFileChooser();
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx");
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx", "csv");
             fileChooser.setFileFilter(filter);
             int returnValue = fileChooser.showOpenDialog(frame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
