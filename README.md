@@ -35,7 +35,7 @@ All steps below will notify you with a desktop notification when they are comple
 
 ## Late Entries Analyzer
 ![Contracts](https://github.com/schultzla/TSheetsAPI/blob/master/late.PNG?raw=true)
-Takes a spreadsheet from TSheets that gives all of the 'late entries' for saving time. Employees must save their daily time prior to 9 AM the next day. TSheets gives an excel report of all entries that were saved after this time. This tool is to calculate how may late entries each employee has for a given spreadsheet and gives a report at the end to summarize the information.
+Takes a spreadsheet from TSheets that gives all of the 'late entries' for saving time. Employees must save their daily time prior to 9 AM the next day. TSheets actually gives a spreadsheet with all entries after 5 PM, so the program takes this into account by making sure it doesn't count the entries done between 5 PM and 9 AM the next day, as employees are allowed to submit during this time. TSheets gives an excel report of all entries that were saved after this time. This tool is to calculate how may late entries each employee has for a given spreadsheet and gives a report at the end to summarize the information.
 
 ### Usage
 A properly formatted file must be uplaoded first before you can run and configure the calculator
@@ -59,10 +59,6 @@ TShare uses a number of technologies to accomplish it's tasks
 * OkHTTP3
 * Poiji
 * TSheets API
-
-And of course Dillinger itself is open source with a [public repository][dill]
- on GitHub.
-
 
 License
 ----
