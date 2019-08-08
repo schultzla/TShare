@@ -54,7 +54,7 @@ public class GUIBuilder {
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
 
-        defaultCodes = new HashSet<String>(Arrays.asList(new String[]{"Vacation", "Holiday", "Sick", "Leave without Pay", "Ownership Vacation", "Jury Duty", "Bereavement"}));
+        defaultCodes = new HashSet<>(Arrays.asList(new String[]{"Vacation", "Holiday", "Sick", "Leave without Pay", "Ownership Vacation", "Jury Duty", "Bereavement"}));
 
         /*
          * Buttons
@@ -237,9 +237,15 @@ public class GUIBuilder {
         saveEmployees.add(cancelExport);
 
         String[] mnth = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"};
-        String[] yr = {"2019", "2020", "2021", "2022", "2023"};
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        String[] yr = new String[6];
+        yr[0] = String.valueOf(currentYear - 1);
+        for (int i = 0; i < 5; i++) {
+            yr[i + 1] = String.valueOf(currentYear + i);
+        }
         JComboBox months = new JComboBox(mnth);
         JComboBox years = new JComboBox(yr);
+        years.setSelectedIndex(1);
         JButton confirmUpdate = new JButton("Update");
 
         updateHoursOptions.add(months);
@@ -269,7 +275,7 @@ public class GUIBuilder {
         birthdayCalcPnl.add(birthdayCopy);
         birthdayCalcPnl.add(birthdayUpload);
 
-        tabbedPane.addTab("Birthday Analyzer", birthdayCalcPnl);
+        tabbedPane.addTab("Birthday/Anniversary Analyzer", birthdayCalcPnl);
 
 
         frame.setResizable(false);
@@ -321,6 +327,7 @@ public class GUIBuilder {
         });
 
         confirmUpdate.addActionListener((ActionEvent e) -> {
+            log.setText("");
            StringBuilder month = new StringBuilder(String.valueOf(months.getSelectedIndex() + 1));
            if (month.length() == 1) {
                month.insert(0, "0");
@@ -354,6 +361,7 @@ public class GUIBuilder {
         });
 
         updateToCurrent.addActionListener((ActionEvent e) -> {
+            log.setText("");
             StringBuilder month = new StringBuilder(String.valueOf(months.getSelectedIndex() + 1));
             if (month.length() == 1) {
                 month.insert(0, "0");
@@ -387,6 +395,7 @@ public class GUIBuilder {
         });
 
         update.addActionListener((ActionEvent e) -> {
+            log.setText("");
             progressBar.setIndeterminate(true);
 
             Executor executor = Executors.newSingleThreadExecutor();
@@ -470,6 +479,7 @@ public class GUIBuilder {
         });
 
         beginExport.addActionListener((ActionEvent e) -> {
+            log.setText("");
             effectiveDate = date.getText();
             ArrayList<User> updateUsers = new ArrayList<>();
             for (JCheckBox box : employeeBoxes) {
