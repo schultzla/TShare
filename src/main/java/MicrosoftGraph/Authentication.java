@@ -8,6 +8,8 @@ import okhttp3.*;
 
 import java.io.IOException;
 
+import static Drivers.GUIBuilder.infoBox;
+
 public class Authentication {
 
     public Authentication() {
@@ -42,7 +44,8 @@ public class Authentication {
         try {
             token = new Gson().fromJson(response.body().string(), Token.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            infoBox("Unable to authenticate Microsoft Graph, try launching TShare again", "Error");
+            System.exit(0);
         }
 
         return token;
@@ -60,7 +63,8 @@ public class Authentication {
         try {
             response = client.newCall(request).execute().body().string();
         } catch (IOException e) {
-            e.printStackTrace();
+            infoBox("Unable to authenticate TSheets, try launching TShare again", "Error");
+            System.exit(0);
         }
 
         Fields field = new Gson().fromJson(response, Fields.class);

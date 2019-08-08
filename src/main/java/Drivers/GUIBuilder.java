@@ -33,6 +33,7 @@ public class GUIBuilder {
     static String fileName;
     static int minLates = 0;
     static Analyzer analyzer;
+    static BirthdayAnalyzer birthdayAnalyzer;
     static JCheckBox[] boxes;
     static HashSet<String> defaultCodes = new HashSet<>(), codes = new HashSet<>();
 
@@ -260,6 +261,10 @@ public class GUIBuilder {
 
         birthdayCalc.setEnabled(false);
 
+        JComboBox birthdayMonths = new JComboBox(mnth);
+        birthdayMonths.setSelectedIndex(Calendar.getInstance().get(Calendar.MONTH));
+
+        birthdayCalcPnl.add(birthdayMonths);
         birthdayCalcPnl.add(birthdayCalc);
         birthdayCalcPnl.add(birthdayCopy);
         birthdayCalcPnl.add(birthdayUpload);
@@ -299,7 +304,8 @@ public class GUIBuilder {
         employeeSelector.pack();
 
         birthdayCalc.addActionListener((ActionEvent e) -> {
-
+            log.setText("");
+            birthdayAnalyzer.analyze(birthdayMonths.getSelectedIndex() + 1);
         });
 
         birthdayCopy.addActionListener((ActionEvent e) -> {
@@ -309,7 +315,7 @@ public class GUIBuilder {
         });
 
         birthdayUpload.addActionListener((ActionEvent e) -> {
-            if(fileOpener(calculateLateDays, configure, calculateLateDays.isEnabled())) {
+            if(fileOpener(calculateLateDays, configure, path != null, true)) {
                 birthdayCalc.setEnabled(true);
             }
         });
@@ -437,7 +443,7 @@ public class GUIBuilder {
         });
 
         upload.addActionListener((ActionEvent e) -> {
-            if (fileOpener(calculateLateDays, configure, calculateLateDays.isEnabled())) {
+            if (fileOpener(calculateLateDays, configure, path != null, false)) {
                 boxes = new JCheckBox[analyzer.getCodes().size()];
                 String[] arrCodes = new String[analyzer.getCodes().size()];
 
@@ -521,19 +527,35 @@ public class GUIBuilder {
         }
     }
 
-    public static boolean fileOpener(JButton calculateLate, JButton config, boolean newFile) {
+    public static boolean fileOpener(JButton calculateLate, JButton config, boolean newFile, boolean birthday) {
         while (path == null || newFile) {
             JFileChooser fileChooser = new JFileChooser();
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx", "csv");
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Excel Files", "xlsx", "xlx");
             fileChooser.setFileFilter(filter);
             int returnValue = fileChooser.showOpenDialog(frame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 fileName = selectedFile.getName();
                 path = selectedFile.getAbsolutePath();
-                calculateLate.setEnabled(true);
-                config.setEnabled(true);
-                analyzer = new Analyzer(path);
+                if (birthday) {
+                    try {
+                        birthdayAnalyzer = new BirthdayAnalyzer(path);
+                    } catch (Exception e) {
+                        infoBox("Error, file isn't properly formatted", "Error");
+                        path = null;
+                        return false;
+                    }
+                } else {
+                    try {
+                        analyzer = new Analyzer(path);
+                        calculateLate.setEnabled(true);
+                        config.setEnabled(true);
+                    } catch (NullPointerException e) {
+                        infoBox("Error, file isn't properly formatted", "Error");
+                        path = null;
+                        return false;
+                    }
+                }
                 return true;
             } else if (returnValue == JFileChooser.CANCEL_OPTION) {
                 break;
@@ -541,6 +563,11 @@ public class GUIBuilder {
         }
 
         return false;
+    }
+
+    public static void infoBox(String infoMessage, String titleBar)
+    {
+        JOptionPane.showMessageDialog(null, infoMessage, titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 }
 
