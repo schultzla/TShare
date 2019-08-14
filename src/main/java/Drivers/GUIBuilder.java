@@ -236,7 +236,7 @@ public class GUIBuilder {
         saveEmployees.add(beginExport);
         saveEmployees.add(cancelExport);
 
-        String[] mnth = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"};
+        String[] mnth = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         String[] yr = new String[6];
         yr[0] = String.valueOf(currentYear - 1);

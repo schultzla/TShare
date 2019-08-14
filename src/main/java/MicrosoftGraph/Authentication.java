@@ -44,6 +44,7 @@ public class Authentication {
         try {
             token = new Gson().fromJson(response.body().string(), Token.class);
         } catch (IOException e) {
+            e.printStackTrace();
             infoBox("Unable to authenticate Microsoft Graph, try launching TShare again", "Error");
             System.exit(0);
         }
