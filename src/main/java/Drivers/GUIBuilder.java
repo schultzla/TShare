@@ -9,6 +9,9 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -24,6 +27,7 @@ import java.util.concurrent.Executors;
 public class GUIBuilder {
 
     private ArrayList<JCheckBox> employeeBoxes;
+    public static JCheckBoxMenuItem debug;
     public static String effectiveDate;
     private TreeMap<String, User> users;
     public static JFrame frame;
@@ -38,6 +42,15 @@ public class GUIBuilder {
     static HashSet<String> defaultCodes = new HashSet<>(), codes = new HashSet<>();
 
     protected GUIBuilder(TSheetSearch search, String token) {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu menu = new JMenu("Settings");
+
+        debug = new JCheckBoxMenuItem("Debug Mode");
+
+        menu.add(debug);
+        menuBar.add(menu);
+
         users = search.getAllUsers();
         graph = new Graph(token, search);
 
@@ -176,6 +189,7 @@ public class GUIBuilder {
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame("TShare");
         frame.setIconImage(img);
+        frame.setJMenuBar(menuBar);
         JPanel panel = new JPanel();
         JPanel progressPanel = new JPanel();
         JFrame employeeSelector = new JFrame("Select Employees");
@@ -340,22 +354,26 @@ public class GUIBuilder {
             Executor executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> {
                 update.setEnabled(false);
+                confirmUpdate.setEnabled(false);
+                months.setEnabled(false);
+                years.setEnabled(false);
                 export.setEnabled(false);
+                updateToCurrent.setEnabled(false);
                 manual.setEnabled(false);
-                try {
-                    try {
-                        graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), false);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                tabbedPane.setEnabled(false);
+
+                graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), false);
 
                 SwingUtilities.invokeLater(() -> {
                     progressBar.setIndeterminate(false);
                     update.setEnabled(true);
                     export.setEnabled(true);
                     manual.setEnabled(true);
+                    confirmUpdate.setEnabled(true);
+                    updateToCurrent.setEnabled(true);
+                    months.setEnabled(true);
+                    years.setEnabled(true);
+                    tabbedPane.setEnabled(true);
                 });
             });
         });
@@ -374,21 +392,21 @@ public class GUIBuilder {
             Executor executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> {
                 update.setEnabled(false);
+                confirmUpdate.setEnabled(false);
                 export.setEnabled(false);
+                updateToCurrent.setEnabled(false);
+                tabbedPane.setEnabled(false);
                 manual.setEnabled(false);
-                try {
-                    try {
-                        graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), true);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+
+                graph.updateActualHours(month.toString(), year, months.getSelectedItem().toString(), true);
 
                 SwingUtilities.invokeLater(() -> {
                     progressBar.setIndeterminate(false);
                     update.setEnabled(true);
+                    confirmUpdate.setEnabled(true);
                     export.setEnabled(true);
+                    updateToCurrent.setEnabled(true);
+                    tabbedPane.setEnabled(true);
                     manual.setEnabled(true);
                 });
             });
@@ -403,20 +421,17 @@ public class GUIBuilder {
                 update.setEnabled(false);
                 export.setEnabled(false);
                 manual.setEnabled(false);
-                try {
-                    try {
-                        graph.updateContractReferences();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                tabbedPane.setEnabled(false);
+
+                graph.updateContractReferences();
 
                 SwingUtilities.invokeLater(() -> {
                     progressBar.setIndeterminate(false);
                     update.setEnabled(true);
                     export.setEnabled(true);
                     manual.setEnabled(true);
+                    tabbedPane.setEnabled(true);
+
                 });
             });
 
@@ -496,6 +511,7 @@ public class GUIBuilder {
                 update.setEnabled(false);
                 export.setEnabled(false);
                 manual.setEnabled(false);
+                tabbedPane.setEnabled(false);
                 try {
                     graph.clearList(updateUsers);
                     graph.exportRecords(updateUsers);
@@ -508,6 +524,8 @@ public class GUIBuilder {
                     update.setEnabled(true);
                     export.setEnabled(true);
                     manual.setEnabled(true);
+                    tabbedPane.setEnabled(true);
+
                 });
             });
 
@@ -517,7 +535,20 @@ public class GUIBuilder {
     public static void logMsg(String message) {
         log.append(message);
         log.append("\n");
-        log.setCaretPosition(log.getDocument().getLength());
+
+        if (message.contains("Exception")) {
+            Highlighter highlighter = log.getHighlighter();
+            Highlighter.HighlightPainter painter =
+                    new DefaultHighlighter.DefaultHighlightPainter(Color.red);
+
+            int p0 = log.getText().indexOf(message);
+            int p1 = p0 + message.length();
+            try {
+                highlighter.addHighlight(p0, p1, painter);
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void notif(String message, TrayIcon.MessageType type){

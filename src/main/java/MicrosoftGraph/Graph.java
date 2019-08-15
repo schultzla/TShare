@@ -45,7 +45,7 @@ public class Graph {
     }
 
 
-    public void updateActualHours(String month, String year, String monthName, boolean updateToCurrent) throws IOException {
+    public void updateActualHours(String month, String year, String monthName, boolean updateToCurrent) {
         GUIBuilder.logMsg("=== Updating Indirect Annual Work Plan Actual Hours ===");
         if (updateToCurrent) {
             int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
@@ -65,7 +65,12 @@ public class Graph {
                 try {
                     response = client.newCall(request).execute().body().string();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    if (GUIBuilder.debug.isSelected()) {
+                        GUIBuilder.logMsg(e.getMessage());
+                    } else {
+                        e.printStackTrace();
+                    }
+                    continue;
                 }
 
                 Value val = new Gson().fromJson(response, Value.class);
@@ -79,7 +84,18 @@ public class Graph {
                             .build();
 
                     String body = "";
-                    body = client.newCall(getItem).execute().body().string();
+                    try {
+                        body = client.newCall(getItem).execute().body().string();
+                    } catch (SocketTimeoutException e) {
+                        continue;
+                    } catch (IOException e) {
+                        if (GUIBuilder.debug.isSelected()) {
+                            GUIBuilder.logMsg(e.getMessage());
+                        } else {
+                            e.printStackTrace();
+                        }
+                        continue;
+                    }
 
                     Fields field = new Gson().fromJson(body, Fields.class);
                     DetailedSharepointItem newItem = field.getFields();
@@ -113,6 +129,13 @@ public class Graph {
                                 res = client.newCall(addRequest).execute();
                             } catch (SocketTimeoutException e) {
                                 continue;
+                            } catch (IOException e) {
+                                if (GUIBuilder.debug.isSelected()) {
+                                    GUIBuilder.logMsg(e.getMessage());
+                                } else {
+                                    e.printStackTrace();
+                                }
+                                continue;
                             }
                             res.close();
                         }
@@ -135,8 +158,11 @@ public class Graph {
             try {
                 response = client.newCall(request).execute().body().string();
             } catch (IOException e) {
-                e.printStackTrace();
-            }
+                if (GUIBuilder.debug.isSelected()) {
+                    GUIBuilder.logMsg(e.getMessage());
+                } else {
+                    e.printStackTrace();
+                }            }
 
             Value val = new Gson().fromJson(response, Value.class);
             ArrayList<SharepointItem> items = val.getItems();
@@ -149,8 +175,19 @@ public class Graph {
                         .build();
 
                 String body = "";
-                body = client.newCall(getItem).execute().body().string();
+                try {
+                    body = client.newCall(getItem).execute().body().string();
+                } catch (SocketTimeoutException e) {
+                    continue;
+                } catch (IOException e) {
+                    if (GUIBuilder.debug.isSelected()) {
+                        GUIBuilder.logMsg(e.getMessage());
+                    } else {
+                        e.printStackTrace();
+                    }
+                    continue;
 
+                }
                 Fields field = new Gson().fromJson(body, Fields.class);
                 DetailedSharepointItem newItem = field.getFields();
 
@@ -183,6 +220,13 @@ public class Graph {
                             res = client.newCall(addRequest).execute();
                         } catch (SocketTimeoutException e) {
                             continue;
+                        } catch (IOException e) {
+                            if (GUIBuilder.debug.isSelected()) {
+                                GUIBuilder.logMsg(e.getMessage());
+                            } else {
+                                e.printStackTrace();
+                            }
+                            continue;
                         }
                         res.close();
                     }
@@ -193,7 +237,7 @@ public class Graph {
         GUIBuilder.logMsg("=== Finished Updating Indirect Annual Work Plan Actual Hours ===");
     }
 
-    public void updateContractReferences() throws IOException {
+    public void updateContractReferences()  {
         GUIBuilder.logMsg("=== Updating Contracts Reference List ===");
         HashSet<String> contracts = search.getUniqueJobcodes();
 
@@ -207,8 +251,11 @@ public class Graph {
         try {
             response = client.newCall(request).execute().body().string();
         } catch (IOException e) {
-            e.printStackTrace();
-        }
+            if (GUIBuilder.debug.isSelected()) {
+                GUIBuilder.logMsg(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }        }
 
         Value val = new Gson().fromJson(response, Value.class);
         ArrayList<SharepointItem> items = val.getItems();
@@ -222,8 +269,18 @@ public class Graph {
                         .build();
 
                 String body = "";
-                body = client.newCall(getItem).execute().body().string();
-
+                try {
+                    body = client.newCall(getItem).execute().body().string();
+                } catch (SocketTimeoutException e) {
+                    continue;
+                } catch (IOException e) {
+                    if (GUIBuilder.debug.isSelected()) {
+                        GUIBuilder.logMsg(e.getMessage());
+                    } else {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
                 Fields field = new Gson().fromJson(body, Fields.class);
                 DetailedSharepointItem newItem = field.getFields();
 
@@ -240,6 +297,13 @@ public class Graph {
                         try {
                             client.newCall(deleteItem).execute();
                         } catch (SocketTimeoutException e) {
+                            continue;
+                        } catch (IOException e) {
+                            if (GUIBuilder.debug.isSelected()) {
+                                GUIBuilder.logMsg(e.getMessage());
+                            } else {
+                                e.printStackTrace();
+                            }
                             continue;
                         }
                     }
@@ -268,6 +332,13 @@ public class Graph {
             try {
                 client.newCall(addRequest).execute();
             } catch (SocketTimeoutException e) {
+                continue;
+            } catch (IOException e) {
+                if (GUIBuilder.debug.isSelected()) {
+                    GUIBuilder.logMsg(e.getMessage());
+                } else {
+                    e.printStackTrace();
+                }
                 continue;
             }
         }
@@ -317,7 +388,7 @@ public class Graph {
         GUIBuilder.logMsg("=== New contracts exported to SharePoint in " + minutes + " minutes and " + seconds + " seconds. ===");
     }
 
-    public void clearList(ArrayList<User> users) throws IOException {
+    public void clearList(ArrayList<User> users)  {
         Stopwatch watch = Stopwatch.createStarted();
         GUIBuilder.logMsg("=== Deleting Records ===");
 
@@ -328,9 +399,18 @@ public class Graph {
                 .build();
 
 
-        Response response = client.newCall(request).execute();
+        String response = null;
+        try {
+            response = client.newCall(request).execute().body().string();
+        } catch (IOException e) {
+            if (GUIBuilder.debug.isSelected()) {
+                GUIBuilder.logMsg(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
+        }
 
-        Value val = new Gson().fromJson(response.body().string(), Value.class);
+        Value val = new Gson().fromJson(response, Value.class);
         ArrayList<SharepointItem> items = val.getItems();
 
         for (SharepointItem s : items) {
@@ -341,8 +421,18 @@ public class Graph {
                     .build();
 
             String body = "";
-            body = client.newCall(getItem).execute().body().string();
-
+            try {
+                body = client.newCall(getItem).execute().body().string();
+            } catch (SocketTimeoutException e) {
+                continue;
+            } catch (IOException e) {
+                if (GUIBuilder.debug.isSelected()) {
+                    GUIBuilder.logMsg(e.getMessage());
+                } else {
+                    e.printStackTrace();
+                }
+                continue;
+            }
             Fields field = new Gson().fromJson(body, Fields.class);
             DetailedSharepointItem newItem = field.getFields();
 
@@ -362,12 +452,18 @@ public class Graph {
                         client.newCall(deleteItem).execute();
                     } catch (SocketTimeoutException e) {
                         continue;
+                    } catch (IOException e) {
+                        if (GUIBuilder.debug.isSelected()) {
+                            GUIBuilder.logMsg(e.getMessage());
+                        } else {
+                            e.printStackTrace();
+                        }
+                        continue;
                     }
                 }
             }
         }
 
-        response.body().close();
         watch.stop();
         long minutes = watch.elapsed(TimeUnit.MINUTES);
         long seconds = watch.elapsed(TimeUnit.SECONDS) - (minutes * 60);

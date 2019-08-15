@@ -12,6 +12,8 @@ import okhttp3.Response;
 
 import java.awt.*;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -79,7 +81,11 @@ public class TSheetSearch {
             return result;
 
         } catch (IOException e) {
-            e.printStackTrace();
+            if (GUIBuilder.debug.isSelected()) {
+                GUIBuilder.logMsg(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
         }
 
         return "Failed";
@@ -87,7 +93,21 @@ public class TSheetSearch {
 
     public HashMap<User, Double[]> calcMonthlyHours(String month, String year) {
         HashMap<User, Double[]> empHours = new HashMap<>();
-        String startDate = year + "-" + month + "-01", endDate = year + "-" + month + "-31";
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        Date start = null;
+        try {
+            start = sdf.parse(year + "-" + month + "-01");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        String startDate = sdf.format(start);
+        cal.setTime(start);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String endDate = sdf.format(cal.getTime());
+
         OkHttpClient client = new OkHttpClient();
 
         for (User u : this.getAllUsers().values()) {
@@ -101,14 +121,52 @@ public class TSheetSearch {
             try {
                 result = client.newCall(request).execute().body().string();
             } catch (Exception e) {
-                e.printStackTrace();
+                if (GUIBuilder.debug.isSelected()) {
+                    GUIBuilder.logMsg(e.getMessage());
+                } else {
+                    e.printStackTrace();
+                }
+                continue;
             }
-
 
             Results root = new Gson().fromJson(result, Results.class);
 
+            List<Timesheet> timesheets = new ArrayList<>();
+            try {
+                timesheets = root.getTimesheets().getTimesheets();
+            } catch (NullPointerException e) {
+                GUIBuilder.logMsg("Error, unable to update " + u.getName() + " (NullPointerException)");
+                continue;
+            }
+
+            int page = 2;
+            while (root.isMore()) {
+                Request moreRequest = new Request.Builder()
+                        .url("https://rest.tsheets.com/api/v1/timesheets?per_page=50&start_date=" + startDate + "&end_date=" + endDate + "&supplemental_data=no&user_ids=" + u.getId() + "&page=" + page)
+                        .get()
+                        .addHeader("Authorization", "Bearer " + token)
+                        .build();
+
+                String moreResult = null;
+                try {
+                    moreResult = client.newCall(moreRequest).execute().body().string();
+                } catch (Exception e) {
+                    if (GUIBuilder.debug.isSelected()) {
+                        GUIBuilder.logMsg(e.getMessage());
+                    } else {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+                page++;
+
+                root = new Gson().fromJson(moreResult, Results.class);
+
+                timesheets.addAll(root.getTimesheets().getTimesheets());
+            }
+
             double totalIndirect = 0, paidTimeOff = 0;
-            for (Timesheet t : root.getTimesheets().getTimesheets()) {
+            for (Timesheet t : timesheets) {
                 double hours = t.getDuration() / 60.0 / 60.0;
                 if (getJobcode(t.getJobcode_id()).getType().equals("pto")) {
                     paidTimeOff += hours;
