@@ -22,8 +22,14 @@ public class Driver {
         Token token = new Authentication().authorize();
         String key = new Authentication().authorizeTSheets(token);
         search = new TSheetSearch(key);
-
-        GUIBuilder gui = new GUIBuilder(search, token.getToken());
+        try {
+            GUIBuilder gui = new GUIBuilder(search, token.getToken());
+        } catch (Exception e) {
+            if (GUIBuilder.debug.isSelected()) {
+                GUIBuilder.logMsg("There was an error! Below is the stack trace");
+                GUIBuilder.logMsg(e.getMessage());
+            }
+        }
     }
 
     public void loadingScreen() throws NullPointerException {

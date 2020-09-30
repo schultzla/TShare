@@ -276,7 +276,9 @@ public class TSheetSearch {
 
         for (Jobcode j : getUserContracts(getUserByUsername(username).getId())) {
             StringBuilder contract = new StringBuilder();
-
+            if (j == null) {
+                continue;
+            }
             if (j.getParentId() == 0) {
                 continue;
             } else if (j.hasChild()) {

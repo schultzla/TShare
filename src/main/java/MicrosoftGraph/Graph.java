@@ -357,6 +357,7 @@ public class Graph {
             GUIBuilder.logMsg("Adding " + u.getName() + suffix + " contracts");
 
             for (String s : search.getStringContracts(u.getUsername())) {
+                System.out.println(s);
                 String json = "{\"fields\": { " +
                         "\"Email\": \"" + u.getEmail() + "\", " +
                         "\"Contract\": \"" + s + "\", " +
